@@ -1,0 +1,30 @@
+Temps OMP
+
+Nb Threads : 1	Temps d'exécution : 80.916000
+Nb Threads : 2	Temps d'exécution : 80.945000
+Nb Threads : 3	Temps d'exécution : 81.234000
+Nb Threads : 4	Temps d'exécution : 81.606000
+Nb Threads : 5	Temps d'exécution : 85.307000
+Nb Threads : 6	Temps d'exécution : 3.452000
+Nb Threads : 7	Temps d'exécution : 15.218000
+Nb Threads : 8	Temps d'exécution : 24.507000
+Nb Threads : 9	Temps d'exécution : 31.557000
+Nb Threads : 10	Temps d'exécution : 37.414000
+Nb Threads : 11	Temps d'exécution : 42.016000
+Nb Threads : 12	Temps d'exécution : 3.488000
+Nb Threads : 13	Temps d'exécution : 9.977000
+Nb Threads : 14	Temps d'exécution : 15.552000
+Nb Threads : 15	Temps d'exécution : 20.390000
+Nb Threads : 16	Temps d'exécution : 24.620000
+Nb Threads : 17	Temps d'exécution : 28.384000
+Nb Threads : 18	Temps d'exécution : 3.481000
+Nb Threads : 19	Temps d'exécution : 8.015000
+Nb Threads : 20	Temps d'exécution : 11.870000
+Nb Threads : 21	Temps d'exécution : 15.495000
+Nb Threads : 22	Temps d'exécution : 18.902000
+Nb Threads : 23	Temps d'exécution : 21.887000
+Nb Threads : 24	Temps d'exécution : 3.366000
+Nb Threads : 25	Temps d'exécution : 7.136000
+Nb Threads : 26	Temps d'exécution : 10.314000
+Nb Threads : 27	Temps d'exécution : 13.342000
+Nb Threads : 28	Temps d'exécution : 15.943000

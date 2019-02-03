@@ -1,0 +1,30 @@
+Temps MPI
+
+Nb Threads : 29	Temps d'exécution : 3.292000
+Nb Threads : 30	Temps d'exécution : 3.136000
+Nb Threads : 31	Temps d'exécution : 3.048000
+Nb Threads : 32	Temps d'exécution : 2.976000
+Nb Threads : 33	Temps d'exécution : 2.884000
+Nb Threads : 34	Temps d'exécution : 2.808000
+Nb Threads : 35	Temps d'exécution : 2.684000
+Nb Threads : 36	Temps d'exécution : 2.619000
+Nb Threads : 37	Temps d'exécution : 2.581000
+Nb Threads : 38	Temps d'exécution : 2.508000
+Nb Threads : 39	Temps d'exécution : 2.428000
+Nb Threads : 40	Temps d'exécution : 2.353000
+Nb Threads : 41	Temps d'exécution : 2.278000
+Nb Threads : 42	Temps d'exécution : 2.275000
+Nb Threads : 43	Temps d'exécution : 2.202000
+Nb Threads : 44	Temps d'exécution : 2.130000
+Nb Threads : 45	Temps d'exécution : 2.121000
+Nb Threads : 46	Temps d'exécution : 2.052000
+Nb Threads : 47	Temps d'exécution : 1.979000
+Nb Threads : 48	Temps d'exécution : 1.973000
+Nb Threads : 49	Temps d'exécution : 1.912000
+Nb Threads : 50	Temps d'exécution : 1.893000
+Nb Threads : 51	Temps d'exécution : 1.840000
+Nb Threads : 52	Temps d'exécution : 1.802000
+Nb Threads : 53	Temps d'exécution : 1.809000
+Nb Threads : 54	Temps d'exécution : 1.805000
+Nb Threads : 55	Temps d'exécution : 1.729000
+Nb Threads : 56	Temps d'exécution : 1.722000

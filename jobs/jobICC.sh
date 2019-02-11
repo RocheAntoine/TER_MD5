@@ -23,7 +23,7 @@ somme=0
 
 for mot in `cat mots.txt`
 do
-    res=`srun src/ICC/main $mot $prefixe | tail -n 1`
+    res=`src/ICC/main $mot $prefixe | tail -n 1`
     echo -e "ICC \t$res\t$mot"  >> resultats/res.txt
     res=`echo $res | cut -d ' ' -f1`
     somme=`bc -l <<< "$res+$somme"`

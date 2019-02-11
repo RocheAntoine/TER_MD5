@@ -49,10 +49,7 @@ int main (int argc, char **argv) {
 
 	ftime(&tap);
 	te = (double) ((tap.time * 1000 + tap.millitm) - (tav.time * 1000 + tav.millitm)) / 1000;
-	if(argv[3][0] == 'o')
-		printf("Nb Threads : %d\tTemps d'exécution : %f\n", nbThreads, te);
-	else
-		printf("Temps d'exécution : %f\n", te);
+	printf("%f \t%s", te,word);
 
 	return 0;
 }

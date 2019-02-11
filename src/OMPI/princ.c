@@ -53,7 +53,7 @@ int main (int argc, char **argv) {
 	memset(monMD5, 0, sizeof(monMD5));
 	memset(word, 0, sizeof (word));
 
-	if (argc != 4)
+	if (argc != 3)
 	{
 		fprintf (stderr, "usage: %s string-to-hash taille-du-prefixe o/s\n", argv[0]);
 		exit(1);

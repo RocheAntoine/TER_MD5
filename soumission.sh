@@ -5,7 +5,7 @@ nMots=3
 #rm mots.txt
 #for(( i=0;i<nMots;i++ ))
 #do
-mot=`cat /dev/urandom | tr -dc 'a-zA-Z0-9+\-\*/=()><%$@#!&\.\;?,_' | fold -w $tailleMot | head -n $nMots > jobs/mots.txt`
+mot=`cat /dev/urandom | tr -dc 'a-zA-Z0-9+\-\*/=()><%$@#!&\.\;?,_' | fold -w $tailleMot | head -n $nMots > mots.txt`
 #done
 
 heure=`date '+%Y-%m-%d %H:%M:%S'`

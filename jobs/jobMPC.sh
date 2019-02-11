@@ -24,7 +24,7 @@ module load mpc/3.2.1
 somme=0
 for mot in `cat mots.txt`
 do
-    res=`mpcrun ../src/MPC/main $mot $prefixe | tail -n 1`
+    res=`mpcrun src/MPC/main $mot $prefixe | tail -n 1`
     echo -e "MPC \t$res\t$mot"  >> resultats/res.txt
     res=`echo $res | cut -d ' ' -f1`
     somme=`bc -l <<< "$res+$somme"`

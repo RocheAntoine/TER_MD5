@@ -20,9 +20,10 @@ module load intel/2018.3
 module load openmpi/2.0.4.1.1_icc
 
 somme=0
+
 for mot in `cat mots.txt`
 do
-    res=`srun ../src/ICC/main $mot $prefixe | tail -n 1`
+    res=`srun src/ICC/main $mot $prefixe | tail -n 1`
     echo -e "ICC \t$res\t$mot"  >> resultats/res.txt
     res=`echo $res | cut -d ' ' -f1`
     somme=`bc -l <<< "$res+$somme"`

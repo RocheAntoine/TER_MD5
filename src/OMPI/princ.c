@@ -52,7 +52,7 @@ int main (int argc, char **argv) {
 		gagnant = 1;
 		if(!TIME_MODE)
 		{
-			printf("Gagne : %s\n", word);
+			printf("Gagne : %s\n", word)
 			for (i = 0; i < 16; i++) {
 				printf("%02x", (unsigned int) monMD5[i]);
 			}

@@ -17,6 +17,7 @@
 #define LONGMAXMOT 10
 #define TIME_MODE 1
 
+
 struct bf {
 	char tabSymbole[MAXSYMBOLE] ;
 	int nbSymbole;
@@ -24,8 +25,11 @@ struct bf {
 
 void initTabSymb(struct bf*);
 void decode(struct bf* e, int c, int l, char word[]);
-bool bruteForceOMP(int p, int l,char word[], unsigned char monMD5[], int*);
+bool bruteForceOMP(int p, char word[], unsigned char monMD5[], int*);
 bool bruteForceSeq(int p, int l,char word[], unsigned char monMD5[]);
-bool bruteForcePrefixe(struct bf* e, int p, int l, char word[],unsigned char monMD5[]);
+bool bruteForcePrefixe(struct bf* e, unsigned long int p, int l, char word[],unsigned char monMD5[]);
 
+
+int minimum(int a, int b);
+int maximum(int a, int b);
 #endif

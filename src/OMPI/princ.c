@@ -18,37 +18,19 @@ int main (int argc, char **argv) {
 	int nbThreads;
 	int gagnant = 0;
 	char word[64];
-	char hex[129]; 
-
+	char hex[129];
+	struct timeb tav, tap ;
+	double te;
+	ftime(&tav);
 	MPI_Init(&argc, &argv);
+
+
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-
-	/*
-	if(rank == 1)
-	{
-		MPI_Barrier(MPI_COMM_WORLD);
-		MPI_Send(&_a, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-		MPI_Barrier(MPI_COMM_WORLD);
-	}
-
-	if(rank == 0)
-	{
-		MPI_Irecv(&i, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &req);
-		printf("Etat message : %d\n", i);
-		MPI_Barrier(MPI_COMM_WORLD);
-		MPI_Barrier(MPI_COMM_WORLD);
-		MPI_Irecv(&i, 1, MPI_INT, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &req);
-		printf("Etat message : %d\n", i);
-	}
-	*/
-
-
 	int taillePrefixe;
 	// pour le temps
-	struct timeb tav, tap ;
-	double te;
+
 
 	memset(monMD5, 0, sizeof(monMD5));
 	memset(word, 0, sizeof (word));
@@ -63,12 +45,9 @@ int main (int argc, char **argv) {
 				 
 	// on hash le code
 	MD5(word, strlen(word),monMD5);
-
-		ftime(&tav);
-
-
-
-	if (bruteForceOMP(taillePrefixe, strlen(word), word, monMD5, &nbThreads))
+	if(!TIME_MODE)
+		printf("Début_bruteforce\n");
+	if (bruteForceOMP(taillePrefixe, word, monMD5, &nbThreads))
 	{
 		gagnant = 1;
 		if(!TIME_MODE)
@@ -80,15 +59,17 @@ int main (int argc, char **argv) {
 			printf("\n");
 		}
 	}
-
+	if(!TIME_MODE)
+		printf("Fin_bruteforce\n");
+	MPI_Barrier(MPI_COMM_WORLD);
 
 	if(gagnant)
 	{
 		ftime(&tap);
 		te = (double) ((tap.time * 1000 + tap.millitm) - (tav.time * 1000 + tav.millitm)) / 1000;
-		printf("%f \t%s", te,word);
+		printf("%lf \t%s", te,word);
 	}
-	//MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Finalize();
 	return 0;
 }

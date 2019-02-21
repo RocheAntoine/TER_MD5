@@ -13,6 +13,8 @@
 #include <math.h>
 #include <mpi.h>
 
+int minimum(int a, int b){if(a<b) return a; return b;}
+int maximum(int a, int b){if(a>b) return a; return b;}
 
 void initTabSymb(struct bf* e) {
 	int i, index;
@@ -95,11 +97,12 @@ bool bruteForceSeq(int p, int l, char motGagnant[], unsigned char monMD5[]) {
 	return match;
 }
 
-bool bruteForceOMP(int p, int l, char motGagnant[], unsigned char monMD5[], int* nbThreads) {
+bool bruteForceOMP(int p, char motGagnant[], unsigned char monMD5[], int* nbThreads) {
 	bool match;
-	int j, nbPrefixe, prefixe, i;
+	int j, i, taillePrefixe, l;
+	unsigned long int nbPrefixe, prefixe;
 	struct bf env;
-	int rank, size, min, max, res = 0, tmp, frequence;
+	int rank, size, min, max, res = 0, tmp = 0, frequence;
 	MPI_Request req;
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -109,64 +112,83 @@ bool bruteForceOMP(int p, int l, char motGagnant[], unsigned char monMD5[], int*
 	if(!TIME_MODE)
 		if(rank == 0)
 		{
-			printf("longueur du mot : %d, longueur du prefixe %d\n", l, p);
+			printf("Size : %d\n", size);
 			printf("Ensemble des symboles (%d) :\n", env.nbSymbole);
 
 			for (j = 0; j < env.nbSymbole; j++) printf("%c", env.tabSymbole[j]);
 				printf("\n");
 		}
 	// on commence par calculer le nombre de prefixe
-	nbPrefixe = pow(env.nbSymbole, p);
-	if(!TIME_MODE)
-		if(rank == 0)
-			printf("\nLe nombre de prefixe : \t %d\n", nbPrefixe);
 
-	frequence = nbPrefixe / nbPrefixe;
+
+
 	match = false;
-	MPI_Irecv(&tmp, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &req);
-	MPI_Barrier(MPI_COMM_WORLD);
-	//omp_set_num_threads(nbThreads);
-#pragma omp parallel shared(env, match, motGagnant, res)
+	if(size > 1) {
+		MPI_Irecv(&tmp, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &req);
+		MPI_Barrier(MPI_COMM_WORLD);
+	}
+	for(l = 1; l <= LONGMAXMOT && res < 1; l++)
 	{
-		char word[64]; // le mot local sur lequel travailler
+		if(res < 1 && tmp < 1) {
+#pragma omp parallel shared(env, match, motGagnant, res, tmp) private(taillePrefixe, nbPrefixe)
+			{
+				char word[64]; // le mot local sur lequel travailler
+				//taillePrefixe = minimum(p, l);
+				taillePrefixe = maximum(l - 2, 1);
+				nbPrefixe = pow(env.nbSymbole, taillePrefixe);
 #pragma omp single
-		{
-			*nbThreads = omp_get_num_threads();
-			if(!TIME_MODE)
-				if(rank ==0)
-					printf("Nombre de threads : %d\n", *nbThreads);
-		}
+				{
+					*nbThreads = omp_get_num_threads();
+					if (!TIME_MODE)
+						if (rank == 0) {
+							printf("Nombre de threads : %d\n", *nbThreads);
+							printf("Taille mot : %d\n", l);
+							printf("Taille prefixe de base : %d\n", p);
+							printf("Taille prefixe : %d\n", taillePrefixe);
+							printf("\nLe nombre de prefixe : \t %d\n", nbPrefixe);
+							printf("Rang : %d\n", rank);
+						}
+				}
+
+
 #pragma omp for schedule(dynamic)
-		for (prefixe = rank; prefixe < nbPrefixe; prefixe += size) {
-			if (!match && !res) {
-				decode(&env, prefixe, p, word);
-				if (bruteForcePrefixe(&env, p, l, word, monMD5)) {
-				//	printf("%d : trouve\n", rank);
-					match = true;
-					res = 1;
-					//MPI_Cancel(&req);
-					for(i = 0; i < size; i++)
-					{
-						if (i != rank)
-						{
-							MPI_Isend(&res, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &req);
-							//printf("%d : message arret envoye a %d\n", rank, i);
+				for (prefixe = rank; prefixe < nbPrefixe; prefixe += size) {
+
+					if (res < 1 && tmp < 1) {
+						//printf("%d : res : %d\n", rank, res);
+						decode(&env, prefixe, taillePrefixe, word);
+						if (bruteForcePrefixe(&env, taillePrefixe, l, word, monMD5)) {
+							//	printf("%d : trouve\n", rank);
+							match = true;
+							res = 1;
+							sprintf(motGagnant,"%s",word);
+							//MPI_Cancel(&req);
+							if (size > 1) {
+								for (i = 0; i < size; i++) {
+									if (i != rank) {
+										MPI_Isend(&res, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &req);
+										if(!TIME_MODE)
+											printf("%d : message arret envoye a %d\n", rank, i);
+									}
+								}
+							}
+							//	MPI_Bcast(&res, 1, MPI_INT, rank, MPI_COMM_WORLD);
 						}
 					}
-
-				//	MPI_Bcast(&res, 1, MPI_INT, rank, MPI_COMM_WORLD);
-				}
-			//	else if(nb % frequence == 0)
-			//	{
+					//	else if(nb % frequence == 0)
+					//	{
 					//printf("%d : test reception\n",rank);
-				else if(!res) {
+					if (size > 1) {
+						if (res < 1 && tmp < 1) {
 #pragma omp critical
-					res = MPI_Test(&req, &tmp, MPI_STATUSES_IGNORE);
+							res += abs(MPI_Test(&req, &tmp, MPI_STATUSES_IGNORE));
+						}
+					}
+					//printf("%d : res %d\n", rank , res);
+					//	}
+
+
 				}
-
-				//printf("%d : res %d\n", rank , res);
-			//	}
-
 			}
 		}
 	}
@@ -174,13 +196,13 @@ bool bruteForceOMP(int p, int l, char motGagnant[], unsigned char monMD5[], int*
 	return match;
 }
 
-bool bruteForcePrefixe(struct bf* e, int p, int l, char word[], unsigned char monMD5[]) {
+bool bruteForcePrefixe(struct bf* e, unsigned long int p, int l, char word[], unsigned char monMD5[]) {
 	// p designe la position de depart dans le mot
 	// word[0..p-1] contient le prefixe
 	// l designe la longueur totale du mot a construire
 	// monMD5 contient le hachage a trouver
 	bool match = false;
-	int pos[LONGMAXMOT], lmin, lc, i, tour = 0, nbTest;
+	unsigned long int pos[LONGMAXMOT], lmin, lc, i, tour = 0, nbTest;
 
 	// pour le hachage
 	unsigned char courantMD5[MD5_DIGEST_LENGTH];

@@ -1,12 +1,12 @@
 #!/bin/bash
-
+module unload mpc/3.2.1
 module load intel/2018.3
 module load openmpi/2.0.4.1.1_icc
-module load mpc/3.2.1
+
 
 icc=true
-mpi=true
-mpc=true
+mpi=false
+mpc=false
 ompi=true
 
 cd src
@@ -25,15 +25,16 @@ make -j
 cd ../
 fi
 
-if [ "$mpc" = true ]; then
-cd MPC
+if [ "$ompi" = true ]; then
+cd OMPI
 make clean
 make -j
 cd ../
 fi
 
-if [ "$ompi" = true ]; then
-cd OMPI
+if [ "$mpc" = true ]; then
+module load mpc/3.2.1
+cd MPC
 make clean
 make -j
 fi

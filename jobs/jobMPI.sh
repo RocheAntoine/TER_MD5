@@ -5,7 +5,7 @@
 #SBATCH --error=logs/job.%J.err
 #SBATCH --output=logs/job.%J.out
 #SBATCH -p short
-#SBATCH --time=02:00:00
+#SBATCH --time=24:00:00
 #SBATCH --mem 50000
 #SBATCH -n 28
 #SBATCH -N 1

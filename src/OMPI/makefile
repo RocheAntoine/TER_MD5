@@ -1,6 +1,6 @@
 SHELL = /bin/sh
 CC = mpicc -O3 -fopenmp
-EXEC = mainICC
+EXEC = main
 SRC = $(EXEC).c
 OPTIONS = -lm -lcrypto
 

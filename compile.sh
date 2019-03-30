@@ -4,10 +4,10 @@ module load intel/2018.3
 module load openmpi/2.0.4.1.1_icc
 
 
-icc=true
-mpi=false
+icc=false
+mpi=true
 mpc=false
-ompi=true
+ompi=false
 
 cd src
 

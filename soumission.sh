@@ -1,13 +1,12 @@
 #!/bin/bash
 
 generationMot=false
-
 tailleMotMin=1
-tailleMotMax=10
+tailleMotMax=4
 nMots=10
 
-nbNoeudsMin=8
-nbNoeudsMax=8
+nbNoeudsMin=1
+nbNoeudsMax=1
 
 
 heure=`date '+%Y-%m-%d_%H:%M:%S'`
@@ -31,8 +30,8 @@ do
     sed -i 's/#SBATCH -n.*/#SBATCH -n '$nbProc'/' jobs/jobMPI.sh
     sed -i 's/fichierRes=.*/fichierRes=resultats\/res_'$heure'.txt/' jobs/job*.sh
     sed -i 's/nbNoeuds=.*/nbNoeuds='$nbNoeuds'/' jobs/job*.sh
-    #    #sbatch jobs/jobMPI.sh
-    sbatch jobs/jobOMPI.sh
+    sbatch jobs/jobMPI.sh
+    #sbatch jobs/jobOMPI.sh
     #    #sbatch jobs/jobMPC.sh
     #    #sbatch jobs/jobICC.sh
 done

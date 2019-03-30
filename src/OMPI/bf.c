@@ -120,7 +120,17 @@ bool bruteForceOMP(int p, char motGagnant[], unsigned char monMD5[], int* nbThre
 		}
 	// on commence par calculer le nombre de prefixe
 
-
+#pragma omp parallel
+	{
+		if(!rank && !omp_get_thread_num())
+		{
+			printf("%d, %d : Premier pragma\n", rank, omp_get_thread_num());
+		}
+		else
+		{
+			printf("%d, %d : Second pragma\n", rank, omp_get_thread_num());
+		}
+	}
 
 	match = false;
 	if(size > 1) {

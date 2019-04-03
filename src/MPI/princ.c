@@ -26,7 +26,12 @@ int main (int argc, char **argv) {
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 	MPI_Comm_size(MPI_COMM_WORLD, &nbThreads);
 
-
+	if(nbThreads == 1)
+	{
+		printf("Erreur : Impossible d'utiliser qu'un thread avec MPI\n");
+		MPI_Finalize();
+		exit(1);
+	}
 
 	/* create a type for struct request */
 	init_mpi_struct();
@@ -41,7 +46,7 @@ int main (int argc, char **argv) {
 
 	if(!rank)
 	{
-		printf("Init parametre\n");fflush(stdout);
+	//	printf("Init parametre\n");fflush(stdout);
 		//printf("Taille d'un hash : %d", MD5_DIGEST_LENGTH);
 		param = init_parametre(nomFichier);
 		if(param == NULL)
@@ -52,13 +57,13 @@ int main (int argc, char **argv) {
 		}
 		if(!param->isHash)
 		{
-			printf("alloc hash\n");fflush(stdout);
+		//	printf("alloc hash\n");fflush(stdout);
 			param->hashList=(unsigned char**)malloc(param->nbMots * sizeof(unsigned char*));
 			for(i=0;i<param->nbMots;i++)
 			{
 				//memset(monMD5, 0, sizeof(monMD5));
 				//memset(word, 0, sizeof (word));
-				printf("Hash de %s\n", param->wordList[i]);
+			//	printf("Hash de %s\n", param->wordList[i]);
 				param->hashList[i] = (unsigned char*)malloc(MD5_DIGEST_LENGTH * sizeof(unsigned char));
 				memset(param->hashList[i], 0, sizeof(unsigned char) * MD5_DIGEST_LENGTH);
 				strcpy(word, param->wordList[i]);
@@ -66,6 +71,8 @@ int main (int argc, char **argv) {
 				//strcpy(param->hashList[i], param->hashList[i]);
 			}
 		}
+		bruteForceMPI_maitre(param->wordList, param, nbThreads);
+		/*
 		printf("Init terminee\n");fflush(stdout);
 		//printf("Maitre : Mot a trouver : %s %s\n", param->wordList[0], param->hashList[0]);fflush(stdout);
 
@@ -74,10 +81,15 @@ int main (int argc, char **argv) {
 			printf("%02x", (unsigned int) param->hashList[0][i]);
 		}
 		printf("\n");
-
+*/
 	}
 
+	else
+	{
+		bruteForceMPI_esclave();
+	}
 
+/*
 	ftime(&tav);
 
 	if(!TIME_MODE)
@@ -112,13 +124,8 @@ int main (int argc, char **argv) {
 		printf("MINE %d\n", (int) param->hashList[0][0]);
 	}*/
 	//sleep(1000);
-	if(nbThreads == 1)
-	{
-		printf("Erreur : Impossible d'utiliser qu'un thread avec MPI\n");
-		MPI_Finalize();
-		exit(1);
-	}
 
+/*
 	if(rank == 0)
 	{
 		printf("Maitre : debut\n");fflush(stdout);
@@ -136,10 +143,7 @@ int main (int argc, char **argv) {
 		else
 			sprintf(word, "NON_TROUVE");
 	}
-	else
-	{
-		bruteForceMPI_esclave();
-	}
+	*/
 
 
 	/*MPI_Barrier(MPI_COMM_WORLD);

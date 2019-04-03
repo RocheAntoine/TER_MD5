@@ -11,20 +11,11 @@
 
 #include <stdbool.h>
 #include <math.h>
-#include <stddef.h>
-#include "utils.h"
+
 
 #define MAXSYMBOLE 100
-#define LONGMAXMOT 6
+#define LONGMAXMOT 10
 #define TIME_MODE 1
-
-#define REQUEST_TAG 0
-#define ANSWER_TAG 1
-#define WORD_TAG 2
-#define NEW_MD5_TAG 3
-
-#define max(a,b) ((a) < (b) ? (b) : (a))
-#define min(a,b) ((a) > (b) ? (b) : (a))
 
 
 struct bf {
@@ -32,20 +23,13 @@ struct bf {
 	int nbSymbole;
 };
 
-typedef struct
-{
-	int wordSize;
-	int prefixeSize;
-	long unsigned int prefixe;
-	int newMD5;
-} request_t;
-
-void destroy_mpi_struct();
-void init_mpi_struct();
 void initTabSymb(struct bf*);
 void decode(struct bf* e, int c, int l, char word[]);
-bool bruteForceMPI_maitre(char**, parametre_t*, int);
-void bruteForceMPI_esclave();
-bool bruteForcePrefixe(struct bf* e, int p, int l, char word[],unsigned char monMD5[]);
+bool bruteForceOMP(int p, char word[], unsigned char monMD5[], int*);
+bool bruteForceSeq(int p, int l,char word[], unsigned char monMD5[]);
+bool bruteForcePrefixe(struct bf* e, unsigned long int p, int l, char word[],unsigned char monMD5[]);
 
+
+int minimum(int a, int b);
+int maximum(int a, int b);
 #endif

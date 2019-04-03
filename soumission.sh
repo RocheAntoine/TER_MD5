@@ -1,12 +1,12 @@
 #!/bin/bash
 
-generationMot=false
+generationMot=true
 tailleMotMin=1
-tailleMotMax=4
-nMots=10
+tailleMotMax=5
+nMots=1000
 
-nbNoeudsMin=1
-nbNoeudsMax=1
+nbNoeudsMin=12
+nbNoeudsMax=12
 
 
 heure=`date '+%Y-%m-%d_%H:%M:%S'`

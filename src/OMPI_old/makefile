@@ -4,7 +4,7 @@ EXEC = main
 SRC = $(EXEC).c
 OPTIONS = -lm -lcrypto
 
-OBJETS	= bf.o princ.o utils.o
+OBJETS	= bf.o princ.o
 
 
 
@@ -28,7 +28,3 @@ bf.o: bf.c bf.h
 princ.o: princ.c bf.h
 	@echo "	Compilation de princ.c"
 	@$(CC) -c princ.c $(OPTIONS)
-
-utils.o: utils.c utils.h
-	@echo "	Compilation de utils.c"
-	@$(CC) -c utils.c $(OPTIONS)

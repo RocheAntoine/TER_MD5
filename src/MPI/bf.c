@@ -104,12 +104,16 @@ void bruteForceMPI_esclave()
 	initTabSymb(&env);
 	//init_mpi_struct();
 	//printf("Esclave %d : Reception hash\n", rank);fflush(stdout);
-
-	MPI_Recv(monMD5, MD5_DIGEST_LENGTH, MPI_UNSIGNED_CHAR, 0, NEW_MD5_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-	//printf("Esclave %d : Hash recu\n", rank);fflush(stdout);
-	MPI_Send(&noMatch, 1, MPI_SIGNED_CHAR, 0, ANSWER_TAG, MPI_COMM_WORLD);
-	//printf("Esclave %d : Premiere reponse envoyee\n", rank);fflush(stdout);
-	MPI_Recv(&request, 1, mpi_request_type, 0, REQUEST_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	//MPI_Barrier(MPI_COMM_WORLD);
+	do
+	{
+		MPI_Recv(monMD5, MD5_DIGEST_LENGTH, MPI_UNSIGNED_CHAR, 0, NEW_MD5_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+		//printf("Esclave %d : Hash recu\n", rank);fflush(stdout);
+		MPI_Send(&noMatch, 1, MPI_SIGNED_CHAR, 0, ANSWER_TAG, MPI_COMM_WORLD);
+		//printf("Esclave %d : Premiere reponse envoyee\n", rank);fflush(stdout);
+		MPI_Recv(&request, 1, mpi_request_type, 0, REQUEST_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+	}
+	while(request.newMD5);
 	//printf("Esclave %d : Requete recue\n", rank);fflush(stdout);
 	p = request.prefixeSize;
 	l = request.wordSize;
@@ -121,38 +125,40 @@ void bruteForceMPI_esclave()
 		if(bruteForcePrefixe(&env, p, l, word, monMD5))
 		{
 			//printf("Esclave %d : match true\n", rank);fflush(stdout);
-			fflush(stdout);
+		//	printf("Esclave %d : Envoi mot : %s\n", rank, word);fflush(stdout);
 				//printf("Esclave %d : Envoi match\n", rank);fflush(stdout);
 			MPI_Send(&match, 1, MPI_SIGNED_CHAR, 0, ANSWER_TAG, MPI_COMM_WORLD);
-				//printf("Esclave %d : Envoi mot : %s\n", rank, word);
+		//	printf("Esclave %d : Envoi mot : %s\n", rank, word);
 			MPI_Send(word, 64, MPI_CHAR, 0, WORD_TAG, MPI_COMM_WORLD);
 				//printf("Esclave %d : mot envoye\n", rank);fflush(stdout);
 		}
 		//printf("Esclave : Envoi match\n");
 	//	else
 	//	{
-			MPI_Send(&noMatch, 1, MPI_SIGNED_CHAR, 0, ANSWER_TAG, MPI_COMM_WORLD);
+		MPI_Send(&noMatch, 1, MPI_SIGNED_CHAR, 0, ANSWER_TAG, MPI_COMM_WORLD);
 	//	}
 		//printf("Esclave %d : Reception requete\n", rank);
 		MPI_Recv(&request, 1, mpi_request_type, 0, REQUEST_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-		if(request.newMD5)
+		while(request.newMD5)
 		{
 			//printf("Esclave %d : En attente du Hash\n", rank);fflush(stdout);
 			MPI_Recv(monMD5, MD5_DIGEST_LENGTH, MPI_UNSIGNED_CHAR, 0, NEW_MD5_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 			//printf("Esclave %d : Nouveau hash recu\n", rank);fflush(stdout);
 			MPI_Send(&noMatch, 1, MPI_SIGNED_CHAR, 0, ANSWER_TAG, MPI_COMM_WORLD);
+			//printf("Esclave %d : Demande requete envoyee\n", rank);fflush(stdout);
 			MPI_Recv(&request, 1, mpi_request_type, 0, REQUEST_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+			//printf("Esclave %d : Requete recue\n", rank);fflush(stdout);
 		}
 
 		//printf("Esclave %d : Nouvelle requete recue\n", rank);
 		p = request.prefixeSize;
 		l = request.wordSize;
 		prefixe = request.prefixe;
-		if(prefixe == -1)
+		/*if(prefixe == -1)
 		{
 			//printf("Esclave %d : Message stop recu\n", rank);
 			fflush(stdout);
-		}
+		}*/
 		//printf("Esclave : Requete recue\n");
 	}
 	//printf("Esclave %d : Sortie de boucle\n", rank);fflush(stdout);
@@ -195,19 +201,24 @@ bool bruteForceMPI_maitre(char** motGagnant, parametre_t* param, int nbThreads) 
 
 	printf("Maitre : nbMots : %d\n", param->nbMots);
 
+	request.newMD5 = 0;
+
 	// on commence par calculer le nombre de prefixe
 	for(i = 0; i < param->nbMots; i ++)
 	{
 		match = false;
 		resteThreads = nbThreads - 1;
 		//printf("Maitre : Envoi des hash\n");fflush(stdout);
+		request.newMD5=0;
+		//MPI_Barrier(MPI_COMM_WORLD);
 		for(j = 1; j < nbThreads; j++)
 		{
+		//	printf("Envoi à %d\n",j);fflush(stdout);
 			MPI_Send(param->hashList[i], MD5_DIGEST_LENGTH, MPI_UNSIGNED_CHAR, j, NEW_MD5_TAG, MPI_COMM_WORLD);
+		//	printf("Envoye à %d\n",j);fflush(stdout);
 		}
 		//printf("Maitre : Hash envoyes\n");fflush(stdout);
 
-		request.newMD5 = 0;
 		for (l = 1; l <= LONGMAXMOT; l++)
 		{
 			request.wordSize = l;
@@ -229,66 +240,72 @@ bool bruteForceMPI_maitre(char** motGagnant, parametre_t* param, int nbThreads) 
 		//printf("Maitre : Match recu\n");
 				if (tmpMatch)
 				{
-					request.newMD5 = 1;
+					//request.newMD5 = 1;
 					match = true;
+				//	printf("Maitre : Match true\n");fflush(stdout);
 					MPI_Recv(winnerWord, 64, MPI_SIGNED_CHAR, status.MPI_SOURCE, WORD_TAG, MPI_COMM_WORLD, &status);
 				//	MPI_Send(&request, 1, mpi_request_type, status.MPI_SOURCE, REQUEST_TAG, MPI_COMM_WORLD);
 					printf("Maitre : Mot trouve : %s\n", winnerWord);fflush(stdout);
-					request.newMD5 = 0;
+					//request.newMD5 = 0;
 					if(param->isHash)
 						fprintf(fp, "%s -> %s\n", param->brutHashList[i], winnerWord);
 					else
 						fprintf(fp, "%s\n", winnerWord);
-					memset(winnerWord,0, strlen(winnerWord));
+					//memset(winnerWord,0, strlen(winnerWord));
 				} else
 				{
 					//printf("source : %d\n", status.MPI_SOURCE); fflush(stdout);
 					//printf("Maitre : Envoi requete\n");
-					request.prefixe = prefixe;
+					request.prefixe = ++prefixe;
 					MPI_Send(&request, 1, mpi_request_type, status.MPI_SOURCE, REQUEST_TAG, MPI_COMM_WORLD);
 					//printf("Maitre : Requete envoyee\n");
 				}
 
-				prefixe++;
 			}
 
 			if (match)
 			{
+			//	printf("Maitre : Debut envoi des stop\n");fflush(stdout);
+				request.newMD5 = 1;
 				if(i >= param->nbMots - 1)
 				{
 					printf("Maitre : Travail termine\n");
 					request.prefixe = -1;
 					request.newMD5 = 0;
 				}
-				else
-					request.newMD5 = 1;
+
 				while (resteThreads > 0)
 				{
 					MPI_Recv(&tmpMatch, 1, MPI_SIGNED_CHAR, MPI_ANY_SOURCE, ANSWER_TAG, MPI_COMM_WORLD, &status);
 					if(tmpMatch)
 					{
+						printf("Maitre : Match en trop !\n");
 						MPI_Recv(word, 64, MPI_SIGNED_CHAR, status.MPI_SOURCE, WORD_TAG, MPI_COMM_WORLD, &status);
 						MPI_Recv(&tmpMatch, 1, MPI_SIGNED_CHAR, status.MPI_SOURCE, ANSWER_TAG, MPI_COMM_WORLD, &status);
 
 					}
 					MPI_Send(&request, 1, mpi_request_type, status.MPI_SOURCE, REQUEST_TAG, MPI_COMM_WORLD);
 					resteThreads--;
-					printf("Maitre : Stop envoye, encore %d\n", resteThreads);fflush(stdout);
+			//		printf("Maitre : Stop envoye, encore %d\n", resteThreads);fflush(stdout);
 				}
+			//	printf("Maitre : Fin envoi des stop\n");fflush(stdout);
 				//printf("Maitre : Sortie while\n");fflush(stdout);
+				request.newMD5 = 0;
 				break;
 			}
 		}
 
+		if(i>=param->nbMots-1)
+		{
+			request.prefixe = -1;
+			request.newMD5 = 0;
+		}
+		else
+			request.newMD5 = 1;
+
 		while (resteThreads > 0)
 		{
-			if(i>=param->nbMots-1)
-			{
-				request.prefixe = -1;
-				request.newMD5 = 0;
-			}
-			else
-				request.newMD5 = 1;
+			printf("Nop nop nop nop !\n");
 			MPI_Recv(&tmpMatch, 1, MPI_SIGNED_CHAR, MPI_ANY_SOURCE, ANSWER_TAG, MPI_COMM_WORLD, &status);
 			if(tmpMatch)
 			{
@@ -307,8 +324,10 @@ bool bruteForceMPI_maitre(char** motGagnant, parametre_t* param, int nbThreads) 
 			}
 			MPI_Send(&request, 1, mpi_request_type, status.MPI_SOURCE, REQUEST_TAG, MPI_COMM_WORLD);
 			resteThreads--;
-			printf("Maitre : Stop envoye, encore %d\n", resteThreads);fflush(stdout);
+
+			//printf("Maitre : Stop envoye, encore %d\n", resteThreads);fflush(stdout);
 		}
+		request.newMD5 = 0;
 		//printf("Maitre : Sortie while\n");fflush(stdout);
 	}
 	fclose(fp);

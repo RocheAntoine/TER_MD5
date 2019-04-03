@@ -4,126 +4,174 @@
 #include <stdio.h>
 #include <sys/timeb.h>
 #include <openssl/md5.h>
-#include "bf.h"
 #include <mpi.h>
-#include <omp.h>
+#include "bf.h"
 #include <unistd.h>
+#include "utils.h"
 
 int main (int argc, char **argv) {
 	unsigned char monMD5[MD5_DIGEST_LENGTH];
-	int i = 0;
-	int j = 0;
-	int _a = 1;
-	int rank;
-	int size;
-	int nbThreads;
-	int gagnant = 0;
+	int i;
 	char word[64];
-	char hex[129];
-	int numThread;
-	struct timeb tav, tap ;
-	double te;
-	ftime(&tav);
-	MPI_Init(&argc, &argv);
-
-
-	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-	MPI_Comm_size(MPI_COMM_WORLD, &size);
 
 	int taillePrefixe;
-	int maitre = 0;
+	// pour le temps
+	struct timeb tav, tap ;
+	double te;
+	int nbThreads;
+	int rank;
+	char nomFichier[64];
+
+	MPI_Init(&argc, &argv);
+	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &nbThreads);
+
+	/*if(nbThreads == 1)
+	{
+		printf("Erreur : Impossible d'utiliser qu'un thread avec MPI\n");
+		MPI_Finalize();
+		exit(1);
+	}*/
+
+	/* create a type for struct request */
+	init_mpi_struct();
+
+	if (argc > 1)
+	{
+		strcpy(nomFichier, argv[1]);
+	}
+	else
+		strcpy(nomFichier, "conf.conf");
+
+
+	if(!rank)
+	{
+	//	printf("Init parametre\n");fflush(stdout);
+		//printf("Taille d'un hash : %d", MD5_DIGEST_LENGTH);
+
+#pragma omp parallel sections
+		{
+#pragma omp section
+			{
+				parametre_t* param;
+				param = init_parametre(nomFichier);
+				if(param == NULL)
+				{
+					printf("Erreur init parametre");
+					MPI_Finalize();
+					exit(EXIT_FAILURE);
+				}
+				if(!param->isHash)
+				{
+					//	printf("alloc hash\n");fflush(stdout);
+					param->hashList=(unsigned char**)malloc(param->nbMots * sizeof(unsigned char*));
+					for(i=0;i<param->nbMots;i++)
+					{
+						//memset(monMD5, 0, sizeof(monMD5));
+						//memset(word, 0, sizeof (word));
+						//	printf("Hash de %s\n", param->wordList[i]);
+						param->hashList[i] = (unsigned char*)malloc(MD5_DIGEST_LENGTH * sizeof(unsigned char));
+						memset(param->hashList[i], 0, sizeof(unsigned char) * MD5_DIGEST_LENGTH);
+						strcpy(word, param->wordList[i]);
+						MD5(param->wordList[i], strlen(param->wordList[i]),param->hashList[i]);
+						//strcpy(param->hashList[i], param->hashList[i]);
+					}
+				}
+				printf("Init terminee\n");fflush(stdout);
+				bruteForceMPI_maitre(param->wordList, param, nbThreads);
+			}
+#pragma omp section
+			{
+				bruteForceMPI_esclave();
+			}
+
+		};
+		/*
+		printf("Init terminee\n");fflush(stdout);
+		//printf("Maitre : Mot a trouver : %s %s\n", param->wordList[0], param->hashList[0]);fflush(stdout);
+
+		printf("\n");
+		for (i = 0; i < MD5_DIGEST_LENGTH; i++) {
+			printf("%02x", (unsigned int) param->hashList[0][i]);
+		}
+		printf("\n");
+*/
+	}
+
+	else
+	{
+		bruteForceMPI_esclave();
+	}
+
+/*
+	ftime(&tav);
+
+	if(!TIME_MODE)
+		if(rank == 0)
+			printf("Nb Threads MPI : %d\n", nbThreads);
+
+	/*memset(monMD5, 0, sizeof(monMD5));
+	memset(word, 0, sizeof (word));
+
+	sprintf(word,"%s",argv[1]);
+	taillePrefixe=atoi(argv[2]);
+				 
+	// on hash le code
+	MD5(word, strlen(word),monMD5);
+	//printf("%s %s\n", word, monMD5);
+	if(!rank)
+	{
+		for (i = 0; i < MD5_DIGEST_LENGTH; i++)
+		{
+			printf("%d ", (int) monMD5[i]);
+		}
+		printf("\n");
+		for (i = 0; i < MD5_DIGEST_LENGTH; i++)
+		{
+			printf("%d ", (int) param->hashList[0][i]);
+		}
+		printf("\n");
+	}*/
+	/*if(!rank)
+	{
+		printf("YOUR %d\n", (int) monMD5[0]);
+		printf("MINE %d\n", (int) param->hashList[0][0]);
+	}*/
+	//sleep(1000);
+
 /*
 	if(rank == 0)
 	{
-#pragma omp sections nowait
+		printf("Maitre : debut\n");fflush(stdout);
+		if (bruteForceMPI_maitre(param->wordList, param, nbThreads))
 		{
-			for (i = 0; i < 100000000; i++)
-				for (j = 0; j < 1000000000; j++)
-					_a += i * j;
-			printf("hello\n");
-		};
-	}
-#pragma omp parallel private(numThread)
-	{
-		numThread = omp_get_thread_num();
-		printf("%d, %d\n", rank, numThread);
-	};
-*/
-	if(!rank)
-	{
-	#pragma omp sections
-		{
-#pragma omp section
+			if(!TIME_MODE)
 			{
-				printf("yo\n");
-				//maitre
-			}
-#pragma omp section
-			{
-	#pragma omp parallel private(numThread) num_threads(4)
-				{
-					numThread = omp_get_thread_num();
-					printf("%d, %d\n", rank, numThread);
+				printf("Gagne : %s\n", word);
+				for (i = 0; i < 16; i++) {
+					printf("%02x", (unsigned int) monMD5[i]);
 				}
+				printf("\n");
 			}
 		}
+		else
+			sprintf(word, "NON_TROUVE");
 	}
-	else
-	{
-#pragma omp parallel private(numThread)
-		{
-			numThread = omp_get_thread_num();
-			printf("%d, %d\n", rank, numThread);
-		}
-	}
-	
+	*/
 
 
-
-
-
-	// pour le temps
-/*
-
-	memset(monMD5, 0, sizeof(monMD5));
-	memset(word, 0, sizeof (word));
-
-	if (argc != 3)
-	{
-		fprintf (stderr, "usage: %s string-to-hash taille-du-prefixe o/s\n", argv[0]);
-		exit(1);
-	}
-	sprintf(word,"%s",argv[1]);
-	taillePrefixe=atoi(argv[2]);
-				 printf("Coucou connard\n");
-	// on hash le code
-	MD5(word, strlen(word),monMD5);
-	if(!TIME_MODE)
-		printf("Début_bruteforce\n");
-	if (bruteForceOMP(taillePrefixe, word, monMD5, &nbThreads))
-	{
-		gagnant = 1;
-		if(!TIME_MODE)
-		{
-			printf("Gagne : %s\n", word);
-			for (i = 0; i < 16; i++) {
-				printf("%02x", (unsigned int) monMD5[i]);
-			}
-			printf("\n");
-		}
-	}
-	if(!TIME_MODE)
-		printf("Fin_bruteforce\n");
-	MPI_Barrier(MPI_COMM_WORLD);
-
-	if(gagnant)
+	/*MPI_Barrier(MPI_COMM_WORLD);
+	if(rank == 0)
 	{
 		ftime(&tap);
+
 		te = (double) ((tap.time * 1000 + tap.millitm) - (tav.time * 1000 + tav.millitm)) / 1000;
-		printf("%lf \t%s", te,word);
+		printf("%f \t%s", te,word);
 	}
+*/
 	MPI_Barrier(MPI_COMM_WORLD);
- */
+	destroy_mpi_struct();
+	printf("%d : fini\n", rank);
 	MPI_Finalize();
 	return 0;
 }

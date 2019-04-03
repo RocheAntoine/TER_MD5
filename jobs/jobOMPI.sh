@@ -33,4 +33,4 @@ do
     res=`echo $res | cut -d ' ' -f1`
     somme=`bc -l <<< "$res+$somme"`
 done
-echo "OMPI : Temps total : $somme" >> $fichierRes
+echo "OMPI_old : Temps total : $somme" >> $fichierRes
